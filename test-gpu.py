@@ -44,7 +44,6 @@ if gpus:
     print("GPU details: ", details)
 
 
-print(tf.__version__)
+print("TensorFlow", tf.__version__)
 
 print(tf.reduce_sum(tf.random.normal([1000, 1000])))
-
