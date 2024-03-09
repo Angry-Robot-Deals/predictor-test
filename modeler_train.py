@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
 
 
 # !pip uninstall keras_tuner
@@ -31,43 +32,20 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mut
 
 import warnings
 warnings.filterwarnings("ignore")
-import inspect
-import logging
-import traceback
-
-import sys
-from sklearn.utils import shuffle
 import pandas as pd
 import numpy as np
-import math
-import matplotlib.pyplot as plt
-import gc  # garbage collector
-
-import time
-from datetime import datetime, timezone
-from dateutil.relativedelta import relativedelta
 
 import autokeras as ak
 import tensorflow as tf
-from tensorflow.keras import backend as K  # keras backend functions
-from tensorflow.keras.utils import to_categorical  # convert to OHE
-from tensorflow.keras.models import Sequential, Model, load_model
-from tensorflow.keras.callbacks import LambdaCallback, ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
-from tensorflow.keras.optimizers import Adam
-# from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
-
-import psutil as ps  # library for retrieving information on running processes and system utilization
-import humanize as hm  # library for turning a number into a fuzzy human-readable
-import GPUtil as GPU  # access to GPU subsystem
 
 from modeler import Modeler
-from utils import CustomTimeseriesGenerator
 
-# 'libriaries loaded'
+# 'libraries loaded'
 
 
 # import tensorflow as tf
 print('TensorFlow version:', tf.__version__)
+print('AutoKeras version:', ak.__version__)
 import keras
 print('Keras version:', keras.__version__)
 import keras_tuner
