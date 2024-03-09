@@ -11,6 +11,8 @@ __pycache__/
 .env
 .env.production
 
+image_regressor
+
 # Distribution / packaging
 .Python
 build/

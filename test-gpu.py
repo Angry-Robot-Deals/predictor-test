@@ -42,3 +42,9 @@ print(gpus)
 if gpus:
     details = tf.config.experimental.get_device_details(gpus[0])
     print("GPU details: ", details)
+
+
+print(tf.__version__)
+
+print(tf.reduce_sum(tf.random.normal([1000, 1000])))
+
