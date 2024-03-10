@@ -2,10 +2,11 @@ git lfs pull --all
 git lfs pull --ref origin/main
 
 pip uninstall git+https://github.com/keras-team/keras-tuner.git
-pip uninstall autokeras tensorflow keras keras-tuner tensorflow-macos
+pip uninstall autokeras tensorflow keras keras-tuner tensorflow-macos tf-nightly keras-nightly
 
 pip install git+https://github.com/keras-team/keras-tuner.git
 pip install -U autokeras
+pip install -U keras
 #pip install -U autokeras==1.1.0 tensorflow==2.15 keras==2.15.0 keras-tuner==1.4.7 autokeras pandas numpy scikit-learn GPUtil humanize psutil matplotlib absl-py pyarrow
 #pip install -U autokeras pandas numpy scikit-learn GPUtil humanize psutil matplotlib absl-py pyarrow
 #pip install -U autokeras==1.1.0 pandas numpy scikit-learn GPUtil humanize psutil matplotlib absl-py pyarrow

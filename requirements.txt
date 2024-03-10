@@ -1,0 +1,4 @@
+tf-keras==2.15.0
+tensorflow==2.15.0
+autokeras==1.1.0
+tensorflow-metal==1.1.0

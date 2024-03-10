@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import os
-os.environ["TF_USE_LEGACY_KERAS"] = "1"
+# os.environ["TF_USE_LEGACY_KERAS"] = "1"
 
 
 # !pip uninstall keras_tuner
@@ -21,7 +21,6 @@ os.environ["TF_USE_LEGACY_KERAS"] = "1"
 # load learning model libraries
 
 import absl.logging
-import os
 absl.logging.set_verbosity('fatal')  # 'error' warnings 'fatal' mute all except ERROR
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mute INFO and WARNING, '3' mute all except ERROR
 # os.environ["KERAS_BACKEND"] = "tensorflow"

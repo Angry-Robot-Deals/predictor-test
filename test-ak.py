@@ -1,8 +1,12 @@
 import tensorflow as tf
-from tensorflow.keras.datasets import mnist
+
+print(tf.__version__)
 
 import autokeras as ak
 
+print(ak.__version__)
+
+from tensorflow.keras.datasets import mnist
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train = x_train[:100]
@@ -16,15 +20,12 @@ reg = ak.ImageRegressor(overwrite=True, max_trials=1)
 # Feed the image regressor with training data.
 reg.fit(x_train, y_train, epochs=2)
 
-
 # Predict with the best model.
 predicted_y = reg.predict(x_test)
 print(predicted_y)
 
-
 # Evaluate the best model with testing data.
 print(reg.evaluate(x_test, y_test))
-
 
 reg.fit(
     x_train,
@@ -47,7 +48,6 @@ reg.fit(
     epochs=2,
 )
 
-
 input_node = ak.ImageInput()
 output_node = ak.ImageBlock(
     # Only search ResNet architectures.
@@ -63,7 +63,6 @@ reg = ak.AutoModel(
 )
 reg.fit(x_train, y_train, epochs=2)
 
-
 input_node = ak.ImageInput()
 output_node = ak.Normalization()(input_node)
 output_node = ak.ImageAugmentation(horizontal_flip=False)(output_node)
@@ -73,7 +72,6 @@ reg = ak.AutoModel(
     inputs=input_node, outputs=output_node, overwrite=True, max_trials=1
 )
 reg.fit(x_train, y_train, epochs=2)
-
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
