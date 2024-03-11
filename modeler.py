@@ -1,8 +1,10 @@
 # load libraries
 import absl.logging
 import os
+
 absl.logging.set_verbosity('fatal')  # 'error' warnings 'fatal' mute all except ERROR
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mute INFO and WARNING, '3' mute all except ERROR
+os.environ[
+    'TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mute INFO and WARNING, '3' mute all except ERROR
 # os.environ["KERAS_BACKEND"] = "tensorflow"
 
 # Set CUDA_VISIBLE_DEVICES if we want to use CPU or GPU
@@ -10,6 +12,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mut
 # os.environ["CUDA_VISIBLE_DEVICES"] = 'None' if USE_GPU else '' # '' - for CPU, 'None' - for GPU
 
 import warnings
+
 warnings.filterwarnings("ignore")
 import inspect
 import logging
@@ -44,6 +47,7 @@ def mse_loss(y_true, y_pred):
     squared_diff = K.square(diff)
     return K.mean(squared_diff, axis=-1)
 
+
 def mape_all(y_true, y_pred):
     # print('mape_all:', y_true.shape, y_pred.shape)
     diff = K.abs((y_true - y_pred) / K.clip(K.abs(y_true), K.epsilon(), None))
@@ -62,7 +66,7 @@ class Modeler:
     val_size = 0.1  # validation set 10%
     batch_size = 24  # 24 size of batch
     epochs = 10  # number of epochs for autokeras
-    max_epochs = 100 # this value will not be reached due to callbacks
+    max_epochs = 100  # this value will not be reached due to callbacks
     #
     last_months = 6  # 24  # how many last months in history we take
     num_targets = 1  # how many targets in the right part of data we get to cut and drop them into Y
@@ -70,20 +74,18 @@ class Modeler:
     # directories
     cur_dir = os.getcwd()  # current working directory
     script_name = 'modeler.py'  # script name
-    models_dir = os.path.join(cur_dir, 'models') # models' dir
-    log_file_name = os.path.join(cur_dir, f'{os.path.splitext(script_name)[0]}.log') # log file
+    models_dir = os.path.join(cur_dir, 'models')  # models' dir
+    log_file_name = os.path.join(cur_dir, f'{os.path.splitext(script_name)[0]}.log')  # log file
     #
     # headers
-    target_headers      = ['lpclose']
+    target_headers = ['lpclose']
     # categories_headers  = ['timestamp', 'cbuy_profit', 'cbuy_drawdown', 'cbuy_time', 'csell_profit', 'csell_drawdown',
     #                       'csell_time', 'csignal']
-    # feature_headers     = ['tday_year', 'tday_month', 'tday_week', 'tmonth_year', 'tweek_year', 'tsecond_day', 'topen', \
-    #                        'thigh', 'tlow', 'tclose', 'tvolume', 'lpopen', 'lfopen', 'lphigh', 'lfhigh', 'lplow', 'lflow', \
-    #                        'lpclose', 'lfclose', 'lpvolume', 'lfvolume', 'lppricema', 'lfpricema', 'lpvolumema', 'lfvolumema', \
-    #                        'buy_profit', 'buy_drawdown', 'buy_time', 'sell_profit', 'sell_drawdown', 'sell_time']
-    feature_headers     = ['tday_year', 'tday_month', 'tday_week', 'tmonth_year', 'tweek_year', 'tsecond_day', 'topen', \
-                           'thigh', 'tlow', 'tclose', 'tvolume', 'lpopen', 'lfopen', 'lphigh', 'lfhigh', 'lplow', 'lflow', \
-                           'lpclose', 'lfclose', 'lpvolume', 'lfvolume', 'lppricema', 'lfpricema', 'lpvolumema', 'lfvolumema']
+    feature_headers = ['tday_year', 'tday_month', 'tday_week', 'tmonth_year', 'tweek_year', 'tsecond_day', 'topen',
+                       'thigh', 'tlow', 'tclose', 'tvolume', 'lpopen', 'lfopen', 'lphigh', 'lfhigh', 'lplow', 'lflow',
+                       'lpclose', 'lfclose', 'lpvolume', 'lfvolume', 'lppricema', 'lfpricema', 'lpvolumema',
+                       'lfvolumema', 'past_buy_profit', 'past_buy_dd', 'past_buy_time', 'past_buy_dd_time',
+                       'past_sell_profit', 'past_sell_dd', 'past_sell_time', 'past_sell_dd_time']
 
     def __init__(self, ticker: str = 'TICKER'):
         try:
@@ -105,7 +107,7 @@ class Modeler:
             # logging.basicConfig(filename=self.log_file_name, level=logging.DEBUG,
             #                     format='%(asctime)s - %(levelname)s - %(message)s')
             self.logger = logging.getLogger(__name__)
-            self.logger.setLevel(logging.DEBUG) # logging.INFO
+            self.logger.setLevel(logging.DEBUG)  # logging.INFO
             max_size_bytes = 10 * 1024 * 1024  # 10 Mbytes
             backup_count = 5  # count of backup files
             file_handler = RotatingFileHandler(self.log_file_name, maxBytes=max_size_bytes, backupCount=backup_count)
@@ -286,9 +288,8 @@ class Modeler:
             self.dataset_raw = self.dataset_raw.dropna(axis=0).reset_index(drop=True)
 
             # Stripe dataset by last months
-            last_dataset_date = \
-                datetime.fromtimestamp(int(self.dataset_raw.loc[self.dataset_raw.shape[0] - 1, 'timestamp']),
-                                       tz=timezone.utc)
+            last_dataset_date = datetime.fromtimestamp(
+                int(self.dataset_raw.loc[self.dataset_raw.shape[0] - 1, 'timestamp']), tz=timezone.utc)
             start_date = last_dataset_date - relativedelta(months=self.last_months)  # datetime.now(tz=timezone.utc)
             start_timestamp = int(start_date.timestamp())
             self.dataset_raw = self.dataset_raw[self.dataset_raw['timestamp'] >= start_timestamp].reset_index(drop=True)
@@ -319,15 +320,14 @@ class Modeler:
         try:
             val_split = int(self.dataset_raw.shape[0] * (1 - self.val_size))  # last index for train_set
             self.dataset_train = self.dataset_raw[:val_split - 2 * self.lookback].reset_index(drop=True)  # train
-            self.dataset_val = self.dataset_raw[val_split:].reset_index(drop=True)  # val
-            # self.dataset_raw = None # free memory from dataset_raw
+            self.dataset_val = self.dataset_raw[val_split:].reset_index(
+                drop=True)  # val  # self.dataset_raw = None # free memory from dataset_raw
         except Exception as e:
             self.logdebug(f'ERROR {inspect.currentframe().f_code.co_name}: {e}')
         else:
-            self.logdebug(
-                f'{inspect.currentframe().f_code.co_name} completed: '
-                f'dataset_train.shape: {self.dataset_train.shape} '
-                f'dataset_val.shape: {self.dataset_val.shape} ')
+            self.logdebug(f'{inspect.currentframe().f_code.co_name} completed: '
+                          f'dataset_train.shape: {self.dataset_train.shape} '
+                          f'dataset_val.shape: {self.dataset_val.shape} ')
 
     # split dataset to XY for TimeSeriesForecaster
     def split_xy(self, df, squeeze=False, expand_dims_y=False):
@@ -368,8 +368,7 @@ class Modeler:
             self.model = load_model(filename, compile=False)
 
             # compile the model with custom metrics
-            self.model.compile(loss=mse_loss,
-                               metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
+            self.model.compile(loss=mse_loss, metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
                                # optimizer=Adam(lr=1e-4),
                                )
         except Exception as e:
@@ -404,19 +403,13 @@ class Modeler:
             x_val, y_val = self.split_xy(self.dataset_val, squeeze=False, expand_dims_y=False)
 
             # create generator for test set
-            gen_test = CustomTimeseriesGenerator(
-                x=x_val,
-                y=y_val,
-                lookback=self.lookback,
-                predict_from=self.predict_from,
-                predict_until=self.predict_until,
-                batch_size=self.batch_size,  # x_val.shape[0]
-                squeeze=True,
-            )
+            gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
+                                                 predict_from=self.predict_from, predict_until=self.predict_until,
+                                                 batch_size=self.batch_size, # x_val.shape[0]
+                                                 squeeze=True, )
 
             # compile the model with custom metrics
-            self.model.compile(loss=mse_loss,
-                               metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
+            self.model.compile(loss=mse_loss, metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
                                # optimizer=Adam(lr=1e-4),
                                )
             # get metrics of the model
@@ -440,24 +433,15 @@ class Modeler:
             x_val, y_val = self.split_xy(self.dataset_val, squeeze=False, expand_dims_y=False)
 
             # create forecaster
-            forecaster = ak.TimeseriesForecaster(
-                lookback=self.lookback,
-                predict_from=self.predict_from,
-                predict_until=self.predict_until,
-                max_trials=self.max_trials,
-                objective="val_loss",
-                loss=mse_loss,  # 'mse' # 'mean_squared_error'
-                metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
-                overwrite=True,
-                directory=self.cur_dir,
-            )
+            forecaster = ak.TimeseriesForecaster(lookback=self.lookback, predict_from=self.predict_from,
+                                                 predict_until=self.predict_until, max_trials=self.max_trials,
+                                                 objective="val_loss", loss=mse_loss, # 'mse' # 'mean_squared_error'
+                                                 metrics=[mape_all],
+                                                 # + [f for f in mape_func_list[-self.num_targets:]],
+                                                 overwrite=True, directory=self.cur_dir, )
 
             # start autokeras
-            forecaster.fit(x_train,
-                           y_train,
-                           validation_data=(x_val, y_val),
-                           verbose=1,
-                           batch_size=self.batch_size,
+            forecaster.fit(x_train, y_train, validation_data=(x_val, y_val), verbose=1, batch_size=self.batch_size,
                            epochs=self.epochs)
 
             # get the best model
@@ -465,19 +449,13 @@ class Modeler:
             # self.model.summary()
 
             # create generator for test set
-            gen_test = CustomTimeseriesGenerator(
-                x=x_val,
-                y=y_val,
-                lookback=self.lookback,
-                predict_from=self.predict_from,
-                predict_until=self.predict_until,
-                batch_size=self.batch_size,  # x_val.shape[0]
-                squeeze=True,
-            )
+            gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
+                                                 predict_from=self.predict_from, predict_until=self.predict_until,
+                                                 batch_size=self.batch_size, # x_val.shape[0]
+                                                 squeeze=True, )
 
             # compile the model with custom metrics
-            self.model.compile(loss=mse_loss,
-                               metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
+            self.model.compile(loss=mse_loss, metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
                                # optimizer=Adam(lr=1e-4),
                                )
             # get metrics of the model
@@ -502,9 +480,9 @@ class Modeler:
             self.loginfo(f'ERROR {inspect.currentframe().f_code.co_name}: {e}')
         else:
             self.loginfo(f'{inspect.currentframe().f_code.co_name} completed: '
-                          f'{round(end_time-start_time, 3)} sec ')
+                         f'{round(end_time - start_time, 3)} sec ')
         finally:
-            return result # return as numpy array
+            return result  # return as numpy array
 
     # performance test
     def model_perf_test(self):
@@ -514,19 +492,13 @@ class Modeler:
             x_val, y_val = self.split_xy(self.dataset_val, squeeze=False, expand_dims_y=False)
 
             # create generator for test set
-            gen_test = CustomTimeseriesGenerator(
-                x=x_val,
-                y=y_val,
-                lookback=self.lookback,
-                predict_from=self.predict_from,
-                predict_until=self.predict_until,
-                batch_size=x_val.shape[0],  # self.batch_size
-                squeeze=True,
-            )
+            gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
+                                                 predict_from=self.predict_from, predict_until=self.predict_until,
+                                                 batch_size=x_val.shape[0], # self.batch_size
+                                                 squeeze=True, )
 
             # compile the model with custom metrics
-            self.model.compile(loss=mse_loss,
-                               metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
+            self.model.compile(loss=mse_loss, metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
                                # optimizer=Adam(lr=1e-4),
                                )
 
@@ -540,8 +512,7 @@ class Modeler:
         else:
             self.logdebug(f'{inspect.currentframe().f_code.co_name} completed: '
                           f'Performance = {round(xLen / (end_time - start_time), 3)} samples/sec, '
-                          f'{round((end_time - start_time) / xLen, 3)} seconds/sample '
-                          )
+                          f'{round((end_time - start_time) / xLen, 3)} seconds/sample ')
 
     # save test set in .npy files
     def save_test_set(self):
@@ -551,15 +522,10 @@ class Modeler:
             x_val, y_val = self.split_xy(self.dataset_val, squeeze=False, expand_dims_y=False)
 
             # create generator for test set
-            gen_test = CustomTimeseriesGenerator(
-                x=x_val,
-                y=y_val,
-                lookback=self.lookback,
-                predict_from=self.predict_from,
-                predict_until=self.predict_until,
-                batch_size=x_val.shape[0],  # self.batch_size
-                squeeze=True,
-            )
+            gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
+                                                 predict_from=self.predict_from, predict_until=self.predict_until,
+                                                 batch_size=x_val.shape[0], # self.batch_size
+                                                 squeeze=True, )
 
             # save test dataset in numpy files
             np.save(os.path.join(self.cur_dir, 'x_val.npy'), gen_test[0][0])
@@ -569,8 +535,7 @@ class Modeler:
         else:
             self.logdebug(f'{inspect.currentframe().f_code.co_name} completed: '
                           f'x_val.shape: {gen_test[0][0].shape} '
-                          f'y_val.shape: {gen_test[0][1].shape} '
-                          )
+                          f'y_val.shape: {gen_test[0][1].shape} ')
 
     # train model
     def train_model(self, learning_rate_list=[1e-3, 1e-4, 1e-5, 1e-6]):
@@ -580,96 +545,65 @@ class Modeler:
             gc.collect()  # run garbage collector
 
             # callback - save best model at the end of epoch
-            checkpoint = [
-                ModelCheckpoint(self.model_final_name,
-                                monitor='val_loss',  # loss val_loss
-                                save_best_only=True)
-            ]
+            checkpoint = [ModelCheckpoint(self.model_final_name, monitor='val_loss',  # loss val_loss
+                                          save_best_only=True)]
 
             # callback - stop training if metric does not increase
             early = EarlyStopping(monitor='val_loss',  # loss val_loss
-                                  patience=5,
-                                  mode='auto')
+                                  patience=5, mode='auto')
 
             # callback - reduce learning rate when metric does not increase
-            lr_reduce = ReduceLROnPlateau(
-                monitor='val_loss',  # loss val_loss
-                patience=5,  # 4
-                verbose=0,
-                mode='auto')
+            lr_reduce = ReduceLROnPlateau(monitor='val_loss',  # loss val_loss
+                                          patience=5,  # 4
+                                          verbose=0, mode='auto')
 
             # prepare X and Y for sets headers
-            x_train, y_train = self.split_xy(self.dataset_train, squeeze=False ,expand_dims_y=False)
+            x_train, y_train = self.split_xy(self.dataset_train, squeeze=False, expand_dims_y=False)
             x_val, y_val = self.split_xy(self.dataset_val, squeeze=False, expand_dims_y=False)
 
             # create generator for train set
-            gen_train = CustomTimeseriesGenerator(
-                x=x_train,
-                y=y_train,
-                lookback=self.lookback,
-                predict_from=self.predict_from,
-                predict_until=self.predict_until,
-                batch_size=self.batch_size,
-                squeeze=True,
-                infinite=True,
-            )
+            gen_train = CustomTimeseriesGenerator(x=x_train, y=y_train, lookback=self.lookback,
+                                                  predict_from=self.predict_from, predict_until=self.predict_until,
+                                                  batch_size=self.batch_size, squeeze=True, infinite=True, )
 
             # create generator for val set
-            gen_val = CustomTimeseriesGenerator(
-                x=x_val,
-                y=y_val,
-                lookback=self.lookback,
-                predict_from=self.predict_from,
-                predict_until=self.predict_until,
-                batch_size=self.batch_size,
-                squeeze=True,
-                infinite=True,
-            )
+            gen_val = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
+                                                predict_from=self.predict_from, predict_until=self.predict_until,
+                                                batch_size=self.batch_size, squeeze=True, infinite=True, )
 
-            train_steps = len(gen_train) # num of train batches
-            validation_steps = len(gen_val) # num of val batches
+            train_steps = len(gen_train)  # num of train batches
+            validation_steps = len(gen_val)  # num of val batches
 
             for lr in learning_rate_list:
                 # compile the model with custom metrics and current learning_rate=lr
                 self.model.compile(loss=mse_loss,  # 'mse'
                                    metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
-                                   optimizer=Adam(lr=lr),
-                                   )
+                                   optimizer=Adam(lr=lr), )
 
                 # train model
-                history = self.model.fit(gen_train,
-                                         validation_data=gen_val,
-                                         epochs=self.max_epochs,
+                history = self.model.fit(gen_train, validation_data=gen_val, epochs=self.max_epochs,
                                          # batch_size=self.batch_size,
-                                         steps_per_epoch=train_steps,
-                                         validation_steps=validation_steps,
-                                         callbacks=[checkpoint, early],
-                                         verbose=1,
-                                         )
+                                         steps_per_epoch=train_steps, validation_steps=validation_steps,
+                                         callbacks=[checkpoint, early], verbose=1, )
 
                 # load the final model was saved by callbacks
                 self.load_final_model()
 
                 # create generator for test set
-                gen_test = CustomTimeseriesGenerator(
-                    x=x_val,
-                    y=y_val,
-                    lookback=self.lookback,
-                    predict_from=self.predict_from,
-                    predict_until=self.predict_until,
-                    batch_size=self.batch_size,
-                    squeeze=True,
-                    infinite=False, # for evaluate we should stop generator at the end of data
-                )
+                gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
+                                                     predict_from=self.predict_from, predict_until=self.predict_until,
+                                                     batch_size=self.batch_size, squeeze=True, infinite=False,
+                                                     # for evaluate we should stop generator at the end of data
+                                                     )
 
                 # get metrics of the model
                 self.history = self.model.evaluate(gen_test, verbose=0)
 
-                self.print(f'Trained model (lr={lr}) is saved in self.model and to disk, history is saved in self.history ')
+                self.print(
+                    f'Trained model (lr={lr}) is saved in self.model and to disk, history is saved in self.history ')
         except Exception as e:
             self.logdebug(f'ERROR {inspect.currentframe().f_code.co_name}: {e}')
         else:
             self.logdebug(f'{inspect.currentframe().f_code.co_name} completed: '
                           f'learning_rate_list={learning_rate_list} '
                           f'history={self.history} ')
-

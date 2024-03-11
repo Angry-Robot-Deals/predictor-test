@@ -62,10 +62,10 @@ df = pd.read_parquet(file_path)
 modeler = Modeler(symbol) # create object of Modeler
 modeler.last_months=6 # get 1 month from the end of data
 
-modeler.epochs=3 # задать количество эпох для autokeras
-modeler.max_trials=30 # задать количество триалов для autokeras
+modeler.epochs=2 # задать количество эпох для autokeras
+modeler.max_trials=5 # задать количество триалов для autokeras
 modeler.lookback=384
-modeler.predict_forward=5
+modeler.predict_forward=60
 modeler.batch_size=32
 modeler.max_epochs=10
 
