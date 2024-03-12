@@ -2,8 +2,9 @@
 # coding: utf-8
 
 import os
-# os.environ["TF_USE_LEGACY_KERAS"] = "1"
+import absl.logging
 
+# os.environ["TF_USE_LEGACY_KERAS"] = "1"
 
 # !pip uninstall keras_tuner
 # !pip uninstall keras-nightly tf-nightly[and-cuda]
@@ -15,21 +16,14 @@ import os
 # !pip install -y scikit-learn autokeras gputil psutil humanize
 
 
-# In[ ]:
-
-
-# load learning model libraries
-
-import absl.logging
-
 absl.logging.set_verbosity('fatal')  # 'error' warnings 'fatal' mute all except ERROR
 os.environ[
     'TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mute INFO and WARNING, '3' mute all except ERROR
 # os.environ["KERAS_BACKEND"] = "tensorflow"
 
 # Set CUDA_VISIBLE_DEVICES if we want to use CPU or GPU
-# USE_GPU = True
-# os.environ["CUDA_VISIBLE_DEVICES"] = 'None' if USE_GPU else '' # '' - for CPU, 'None' - for GPU
+USE_GPU = True
+os.environ["CUDA_VISIBLE_DEVICES"] = 'None' if USE_GPU else ''  # '' - for CPU, 'None' - for GPU
 
 import warnings
 
@@ -65,10 +59,10 @@ file_path = f'{folder_path}/dataset_{symbol}.parquet'
 df = pd.read_parquet(file_path)
 
 modeler = Modeler(symbol)  # create object of Modeler
-modeler.last_months = 24  # get 1 month from the end of data
+modeler.last_months = 6  # get 1 month from the end of data
 
 modeler.epochs = 3  # задать количество эпох для autokeras
-modeler.max_trials = 5  # задать количество триалов для autokeras
+modeler.max_trials = 30  # задать количество триалов для autokeras
 modeler.lookback = 384
 modeler.predict_forward = 48
 modeler.batch_size = 24
@@ -105,10 +99,10 @@ modeler.dataset_raw.info()
 # modeler.train_model([1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6])
 
 # start searching for the best architecture in neural networks. model will be saved in the property modeler.model
-# modeler.create_ak_model()
+modeler.create_ak_model()
 
 # save current model as <ticker>_model.h5
-# modeler.save_model()
+modeler.save_model()
 
 # load model from the disk (there are two files: <ticker>_model.h5 and <ticker>_final_model.h5)
 modeler.load_model()
@@ -154,10 +148,10 @@ modeler.model_perf_test()  # start performance test
 print("\nTrain model:")
 # start final training with the list of learning_rates. The model will be trained one by one and will use these lr list
 # modeler.train_model([1e-3, 1e-4])
-modeler.train_model([1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6])
+# modeler.train_model([1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6])
 
 print("\nSave final model:")
 # save current model as <ticker>_final_model.h5
-modeler.save_model_final()
+# modeler.save_model_final()
 
 print("\nDone.")
