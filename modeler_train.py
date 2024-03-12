@@ -78,6 +78,8 @@ modeler.target_headers = ['lpclose']
 modeler.feature_headers = [
     'tday_year', 'tday_month', 'tday_week', 'tmonth_year', 'tweek_year', 'tsecond_day',
     'topen', 'thigh', 'tlow', 'tclose', 'tvolume',
+    'past_buy_profit', 'past_buy_dd', 'past_buy_time', 'past_buy_dd_time',
+    'past_sell_profit', 'past_sell_dd', 'past_sell_time', 'past_sell_dd_time',
     'lpopen', 'lfopen', 'lphigh', 'lfhigh', 'lplow', 'lflow', 'lpvolume', 'lfvolume',
     'lppricema', 'lfpricema', 'lpvolumema', 'lfvolumema', 'lfclose', 'lpclose'
 ]
