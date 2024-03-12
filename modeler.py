@@ -28,12 +28,18 @@ from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 
 import autokeras as ak
+import tensorflow as tf
+
 from tensorflow.keras import backend as K  # keras backend functions
-from tensorflow.keras.models import Sequential, Model, load_model
-from tensorflow.keras.optimizers import Adam
-# from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 from tensorflow.keras.callbacks import LambdaCallback, ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+# from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 from utils import CustomTimeseriesGenerator
+
+from tensorflow.keras.models import Sequential, Model, load_model
+from tensorflow.keras.layers import Input, Dense, Dropout, BatchNormalization, Flatten, Activation, LeakyReLU
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, GlobalMaxPooling1D
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.metrics import Precision, Recall
 
 import psutil as ps  # library for retrieving information on running processes and system utilization
 import humanize as hm  # library for turning a number into a fuzzy human-readable
@@ -81,11 +87,11 @@ class Modeler:
     target_headers = ['lpclose']
     # categories_headers  = ['timestamp', 'cbuy_profit', 'cbuy_drawdown', 'cbuy_time', 'csell_profit', 'csell_drawdown',
     #                       'csell_time', 'csignal']
+    # feature_headers     = ['lpclose']
     feature_headers = ['tday_year', 'tday_month', 'tday_week', 'tmonth_year', 'tweek_year', 'tsecond_day', 'topen',
                        'thigh', 'tlow', 'tclose', 'tvolume', 'lpopen', 'lfopen', 'lphigh', 'lfhigh', 'lplow', 'lflow',
                        'lpclose', 'lfclose', 'lpvolume', 'lfvolume', 'lppricema', 'lfpricema', 'lpvolumema',
-                       'lfvolumema', 'past_buy_profit', 'past_buy_dd', 'past_buy_time', 'past_buy_dd_time',
-                       'past_sell_profit', 'past_sell_dd', 'past_sell_time', 'past_sell_dd_time']
+                       'lfvolumema', ]
 
     def __init__(self, ticker: str = 'TICKER'):
         try:
@@ -404,9 +410,9 @@ class Modeler:
 
             # create generator for test set
             gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
-                                                 predict_from=self.predict_from, predict_until=self.predict_until,
-                                                 batch_size=self.batch_size, # x_val.shape[0]
-                                                 squeeze=True, )
+                predict_from=self.predict_from, predict_until=self.predict_until, batch_size=self.batch_size,
+                # x_val.shape[0]
+                squeeze=True, )
 
             # compile the model with custom metrics
             self.model.compile(loss=mse_loss, metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
@@ -434,11 +440,10 @@ class Modeler:
 
             # create forecaster
             forecaster = ak.TimeseriesForecaster(lookback=self.lookback, predict_from=self.predict_from,
-                                                 predict_until=self.predict_until, max_trials=self.max_trials,
-                                                 objective="val_loss", loss=mse_loss, # 'mse' # 'mean_squared_error'
-                                                 metrics=[mape_all],
-                                                 # + [f for f in mape_func_list[-self.num_targets:]],
-                                                 overwrite=True, directory=self.cur_dir, )
+                predict_until=self.predict_until, max_trials=self.max_trials, objective="val_loss", loss=mse_loss,
+                # 'mse' # 'mean_squared_error'
+                metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
+                overwrite=True, directory=self.cur_dir, )
 
             # start autokeras
             forecaster.fit(x_train, y_train, validation_data=(x_val, y_val), verbose=1, batch_size=self.batch_size,
@@ -450,9 +455,9 @@ class Modeler:
 
             # create generator for test set
             gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
-                                                 predict_from=self.predict_from, predict_until=self.predict_until,
-                                                 batch_size=self.batch_size, # x_val.shape[0]
-                                                 squeeze=True, )
+                predict_from=self.predict_from, predict_until=self.predict_until, batch_size=self.batch_size,
+                # x_val.shape[0]
+                squeeze=True, )
 
             # compile the model with custom metrics
             self.model.compile(loss=mse_loss, metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
@@ -468,6 +473,49 @@ class Modeler:
             self.logdebug(f'{inspect.currentframe().f_code.co_name} completed: '
                           f'model size = {self.model_memory_usage(1000, self.model)} Gbytes for batch=1000, '
                           f'history={self.history} ')
+
+    # Create new functional model Conv1D
+    def create_conv1d_model(self):
+        try:
+            filters = 8  # initial filter count
+            kernel = 3  # kernel_size
+            dropout = 0  # dropout
+            alpha = 0.2  # alpha
+            momentum = 0.8  # momentum
+            normalization = True  # normalization
+
+            # conv1d block
+            def conv1d(block_input, f, num_blocks=2, k=kernel, n=normalization, d=dropout, a=alpha, m=momentum):
+                x = block_input
+                for i in range(1, num_blocks + 1):
+                    x = Conv1D(f, k, padding='same')(block_input)
+                    x = LeakyReLU(alpha=a)(x)
+                    if n: x = BatchNormalization(momentum=m)(x)
+                x = MaxPooling1D()(x)
+                if d: x = Dropout(d)(x)
+                return x
+
+            input1 = Input(shape=(self.lookback, len(self.feature_headers)))  # input layer
+            x = input1
+            x = conv1d(x, filters * 1, 8)  # block_1 256->128
+            x = conv1d(x, filters * 2, 8)  # block_2 128->64
+            x = conv1d(x, filters * 4, 8)  # block_3 64->32
+            x = conv1d(x, filters * 8, 8)  # block_4 32->16
+            x = conv1d(x, filters * 16, 8)  # block_5 16->8
+            x = conv1d(x, filters * 32, 8)  # block_6 8->4
+            x = conv1d(x, filters * 64, 8)  # block_7 4->2
+            x = Flatten()(x)  # flatten layer
+            x = Dense(512, activation='relu')(x)  # fc layer
+            x = Dense(self.predict_forward, activation='tanh')(x)  # output fc layer
+
+            self.model = Model(input1, x)  # model
+
+            self.print('The model is saved in self.model ')
+        except Exception as e:
+            self.logdebug(f'ERROR {inspect.currentframe().f_code.co_name}: {e}')
+        else:
+            self.logdebug(f'{inspect.currentframe().f_code.co_name} completed: '
+                          f'model size = {self.model_memory_usage(1000, self.model)} Gbytes for batch=1000 ')
 
     # predict function
     def model_predict(self, x):
@@ -493,9 +541,9 @@ class Modeler:
 
             # create generator for test set
             gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
-                                                 predict_from=self.predict_from, predict_until=self.predict_until,
-                                                 batch_size=x_val.shape[0], # self.batch_size
-                                                 squeeze=True, )
+                predict_from=self.predict_from, predict_until=self.predict_until, batch_size=x_val.shape[0],
+                # self.batch_size
+                squeeze=True, )
 
             # compile the model with custom metrics
             self.model.compile(loss=mse_loss, metrics=[mape_all],  # + [f for f in mape_func_list[-self.num_targets:]],
@@ -523,9 +571,9 @@ class Modeler:
 
             # create generator for test set
             gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
-                                                 predict_from=self.predict_from, predict_until=self.predict_until,
-                                                 batch_size=x_val.shape[0], # self.batch_size
-                                                 squeeze=True, )
+                predict_from=self.predict_from, predict_until=self.predict_until, batch_size=x_val.shape[0],
+                # self.batch_size
+                squeeze=True, )
 
             # save test dataset in numpy files
             np.save(os.path.join(self.cur_dir, 'x_val.npy'), gen_test[0][0])
@@ -538,7 +586,7 @@ class Modeler:
                           f'y_val.shape: {gen_test[0][1].shape} ')
 
     # train model
-    def train_model(self, learning_rate_list=[1e-3, 1e-4, 1e-5, 1e-6]):
+    def train_model(self, learning_rate_list=[1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]):
         try:
             self.history = None  # def value
 
@@ -554,8 +602,8 @@ class Modeler:
 
             # callback - reduce learning rate when metric does not increase
             lr_reduce = ReduceLROnPlateau(monitor='val_loss',  # loss val_loss
-                                          patience=5,  # 4
-                                          verbose=0, mode='auto')
+                patience=5,  # 4
+                verbose=0, mode='auto')
 
             # prepare X and Y for sets headers
             x_train, y_train = self.split_xy(self.dataset_train, squeeze=False, expand_dims_y=False)
@@ -563,13 +611,13 @@ class Modeler:
 
             # create generator for train set
             gen_train = CustomTimeseriesGenerator(x=x_train, y=y_train, lookback=self.lookback,
-                                                  predict_from=self.predict_from, predict_until=self.predict_until,
-                                                  batch_size=self.batch_size, squeeze=True, infinite=True, )
+                predict_from=self.predict_from, predict_until=self.predict_until, batch_size=self.batch_size,
+                squeeze=True, infinite=True, )
 
             # create generator for val set
             gen_val = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
-                                                predict_from=self.predict_from, predict_until=self.predict_until,
-                                                batch_size=self.batch_size, squeeze=True, infinite=True, )
+                predict_from=self.predict_from, predict_until=self.predict_until, batch_size=self.batch_size,
+                squeeze=True, infinite=True, )
 
             train_steps = len(gen_train)  # num of train batches
             validation_steps = len(gen_val)  # num of val batches
@@ -587,14 +635,13 @@ class Modeler:
                                          callbacks=[checkpoint, early], verbose=1, )
 
                 # load the final model was saved by callbacks
-                self.load_final_model()
+                self.load_model_final()
 
                 # create generator for test set
                 gen_test = CustomTimeseriesGenerator(x=x_val, y=y_val, lookback=self.lookback,
-                                                     predict_from=self.predict_from, predict_until=self.predict_until,
-                                                     batch_size=self.batch_size, squeeze=True, infinite=False,
-                                                     # for evaluate we should stop generator at the end of data
-                                                     )
+                    predict_from=self.predict_from, predict_until=self.predict_until, batch_size=self.batch_size,
+                    squeeze=True, infinite=False,  # for evaluate we should stop generator at the end of data
+                )
 
                 # get metrics of the model
                 self.history = self.model.evaluate(gen_test, verbose=0)
