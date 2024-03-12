@@ -17,13 +17,12 @@ import absl.logging
 
 
 absl.logging.set_verbosity('fatal')  # 'error' warnings 'fatal' mute all except ERROR
-os.environ[
-    'TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mute INFO and WARNING, '3' mute all except ERROR
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # '0' show all, '1' mute INFO, '2' mute INFO and WARNING, '3' mute all except ERROR
 # os.environ["KERAS_BACKEND"] = "tensorflow"
 
 # Set CUDA_VISIBLE_DEVICES if we want to use CPU or GPU
 USE_GPU = True
-os.environ["CUDA_VISIBLE_DEVICES"] = 'None' if USE_GPU else ''  # '' - for CPU, 'None' - for GPU
+# os.environ["CUDA_VISIBLE_DEVICES"] = 'None' if USE_GPU else ''  # '' - for CPU, 'None' - for GPU
 
 import warnings
 
