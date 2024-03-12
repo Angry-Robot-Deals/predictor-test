@@ -69,6 +69,7 @@ modeler.max_epochs = 100
 
 modeler.target_headers = ['lpclose']
 modeler.feature_headers = [
+    # 'open', 'high', 'low', 'close', 'volume',
     'tday_year', 'tday_month', 'tday_week', 'tmonth_year', 'tweek_year', 'tsecond_day',
     'topen', 'thigh', 'tlow', 'tclose', 'tvolume',
     'past_buy_profit', 'past_buy_dd', 'past_buy_time', 'past_buy_dd_time',
