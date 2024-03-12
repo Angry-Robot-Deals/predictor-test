@@ -65,9 +65,9 @@ file_path = f'{folder_path}/dataset_{symbol}.parquet'
 df = pd.read_parquet(file_path)
 
 modeler = Modeler(symbol)  # create object of Modeler
-modeler.last_months = 6  # get 1 month from the end of data
+modeler.last_months = 24  # get 1 month from the end of data
 
-modeler.epochs = 5  # задать количество эпох для autokeras
+modeler.epochs = 2  # задать количество эпох для autokeras
 modeler.max_trials = 5  # задать количество триалов для autokeras
 modeler.lookback = 384
 modeler.predict_forward = 48
