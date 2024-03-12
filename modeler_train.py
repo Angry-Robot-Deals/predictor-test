@@ -70,8 +70,8 @@ modeler.last_months = 24  # get 1 month from the end of data
 modeler.epochs = 3  # задать количество эпох для autokeras
 modeler.max_trials = 5  # задать количество триалов для autokeras
 modeler.lookback = 384
-modeler.predict_forward = 12
-modeler.batch_size = 32
+modeler.predict_forward = 64
+modeler.batch_size = 24
 modeler.max_epochs = 100
 
 modeler.target_headers = ['lpclose']
